@@ -3,6 +3,7 @@
 #include <WiFiUdp.h>
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
+#include <ESPAsyncWebServer.h>
 
 // Definiere den Pin, an dem die NeoPixel-Datenleitung angeschlossen ist
 #define PIN 6
@@ -22,6 +23,15 @@ const long utcOffsetInSeconds = 3600; // Passe an deine Zeitzone an
 
 // Erstelle eine Instanz der Adafruit_NeoPixel-Klasse
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+// Webserver auf Port 80
+AsyncWebServer server(80);
+
+// LED-Einstellungen
+int timeColor = strip.Color(30, 0, 0); // Standardfarbe für die Uhrzeit (Rot)
+int backgroundColor = strip.Color(0, 30, 30); // Standardhintergrundfarbe (Cyan)
+bool randomTextColor = false;
+bool showSingleMinutes = false;
 
 // Definiere die Wörter und ihre entsprechenden Positionen in der Matrix
 struct Wort {
@@ -77,6 +87,14 @@ void initTime() {
 }
 
 void setup() {
+  // Zeige "chill-zone.xyz" beim Booten an
+  clearMatrix();
+  displayWord("CHILL");
+  displayWord("ZONE");
+  strip.show();
+  delay(3000);
+  Serial.begin(115200);
+
   // Initialisiere den NeoPixel-Strip
   strip.begin();
   strip.show(); // Initialisiere alle Pixel auf "aus"
@@ -88,12 +106,79 @@ void setup() {
     Serial.println("Verbinde mit WLAN...");
   }
 
-  Serial.begin(115200);
   Serial.println("WLAN verbunden.");
+  Serial.print("IP-Adresse: ");
+  Serial.println(WiFi.localIP());
 
   // NTP-Client initialisieren
   timeClient.begin();
   initTime();
+
+  // Webserver konfigurieren
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    String html = "<h1>WordClock Einstellungen</h1>";
+    html += "<p><a href='/update'>Aktualisierungsmodus aktivieren</a></p>";
+    html += "<p><a href='/restart'>Neustart</a></p>";
+    html += "<p><a href='/reset_wifi'>WLAN-Einstellungen zurücksetzen</a></p>";
+    html += "<p><a href='/reset_settings'>WordClock-Einstellungen zurücksetzen</a></p>";
+    html += "<h2>LED Einstellungen</h2>";
+    html += "<p>Farbe der Uhrzeit: <input type='color' id='timeColor' value='#FF0000' onchange='changeTimeColor(this.value)'></p>";
+    html += "<p>Hintergrundfarbe: <input type='color' id='backgroundColor' value='#00FFFF' onchange='changeBackgroundColor(this.value)'></p>";
+    html += "<p><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</p>";
+    html += "<p><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</p>";
+    request->send(200, "text/html", html);
+  });
+
+  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "Update-Modus aktiviert");
+  });
+
+  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "WordClock wird neu gestartet...");
+    delay(1000);
+    ESP.restart();
+  });
+
+  server.on("/reset_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "WLAN-Einstellungen wurden zurückgesetzt");
+    WiFi.disconnect(true);
+    delay(1000);
+    ESP.restart();
+  });
+
+  server.on("/reset_settings", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", "WordClock-Einstellungen wurden zurückgesetzt");
+  });
+
+  server.on("/changeTimeColor", HTTP_POST, [](AsyncWebServerRequest *request){
+    if (request->hasParam("color", true)) {
+      String color = request->getParam("color", true)->value();
+      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
+      timeColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
+    }
+    request->send(200, "text/plain", "Farbe der Uhrzeit geändert");
+  });
+
+  server.on("/changeBackgroundColor", HTTP_POST, [](AsyncWebServerRequest *request){
+    if (request->hasParam("color", true)) {
+      String color = request->getParam("color", true)->value();
+      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
+      backgroundColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
+    }
+    request->send(200, "text/plain", "Hintergrundfarbe geändert");
+  });
+
+  server.on("/toggleRandomTextColor", HTTP_POST, [](AsyncWebServerRequest *request){
+    randomTextColor = !randomTextColor;
+    request->send(200, "text/plain", "Zufällige Textfarbe geändert");
+  });
+
+  server.on("/toggleShowSingleMinutes", HTTP_POST, [](AsyncWebServerRequest *request){
+    showSingleMinutes = !showSingleMinutes;
+    request->send(200, "text/plain", "Anzeige der einzelnen Minuten geändert");
+  });
+
+  server.begin();
 }
 
 #ifdef TEST
@@ -174,7 +259,7 @@ void displayWord(const char* wort, bool inc_color = true) {
         int reihe = wörter[i].positionen[j][1];
         if ((reihe < 0 || reihe > 7) || (spalte < 0 || spalte > 7)) break; // Ende der Positionen
         int pixelIndex = reihe * COLS + spalte;
-        strip.setPixelColor(pixelIndex, farben[farbindex]); // Farbe setzen
+        strip.setPixelColor(pixelIndex, randomTextColor ? farben[random(0, 16)] : farben[farbindex]); // Farbe setzen
       }
       if (inc_color) {
         farbindex = (farbindex + 1) % 16;
@@ -187,7 +272,7 @@ void displayWord(const char* wort, bool inc_color = true) {
 // Funktion zum Leeren der Matrix
 void clearMatrix() {
   for (int i = 0; i < NUMPIXELS; i++) {
-    strip.setPixelColor(i, 0); // Schalte alle Pixel aus
+    strip.setPixelColor(i, backgroundColor); // Setze alle Pixel auf Hintergrundfarbe
   }
 }
 
