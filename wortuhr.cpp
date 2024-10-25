@@ -17,7 +17,7 @@ const char* ssid = "<dein Netzwerk>";
 const char* password = "<dein Passwort>";
 
 // NTP-Server und Zeitzone
-const char* ntpServer = "ptbtime1.ptb.de";
+const char* ntpServer = "pool.ntp.org";
 const long utcOffsetInSeconds = 3600; // Passe an deine Zeitzone an
 
 // Erstelle eine Instanz der Adafruit_NeoPixel-Klasse
@@ -71,7 +71,7 @@ NTPClient timeClient(ntpUDP, ntpServer);
 
 // Funktion zur Initialisierung der Zeit mit NTP und zum Festlegen der Zeitzone
 void initTime() {
-  configTime(0, 0, ntpServer);
+  configTime(utcOffsetInSeconds, 0, ntpServer);
   setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1); // Zeitzone für Berlin
   tzset();
 }
@@ -85,9 +85,11 @@ void setup() {
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
+    Serial.println("Verbinde mit WLAN...");
   }
 
   Serial.begin(115200);
+  Serial.println("WLAN verbunden.");
 
   // NTP-Client initialisieren
   timeClient.begin();
@@ -98,9 +100,6 @@ void setup() {
 unsigned int testhour = 11;
 unsigned int testminute = 0;
 void loop() {
-  unsigned int stunden = timeinfo.tm_hour;
-  unsigned int minuten = timeinfo.tm_min;
-
   testminute++;
   if (testminute >= 60) {
     testminute = 0;
@@ -142,7 +141,7 @@ void loop() {
   Serial.print(stunden);
   Serial.print(":");
   Serial.println(minuten);
-  delay(1000 - (millis() - start_millis)); 
+  delay(1000 - (millis() - start_millis));
 }
 #endif
 
@@ -177,7 +176,9 @@ void displayWord(const char* wort, bool inc_color = true) {
         int pixelIndex = reihe * COLS + spalte;
         strip.setPixelColor(pixelIndex, farben[farbindex]); // Farbe setzen
       }
-      farbindex = (farbindex + 1) % 16;
+      if (inc_color) {
+        farbindex = (farbindex + 1) % 16;
+      }
       break;
     }
   }
@@ -210,39 +211,39 @@ void displayTimeInWords(unsigned int stunden, unsigned int minuten) {
   } else if (minuten >= 5 && minuten < 10) {
     displayWord("fuenf");
     displayWord("nach");
-  } else if (minuten >= 10 und minuten < 15) {
+  } else if (minuten >= 10 && minuten < 15) {
     displayWord("zehn");
     displayWord("nach");
-  } else if (minuten >= 15 und minuten < 20) {
+  } else if (minuten >= 15 && minuten < 20) {
     displayWord("fuenf");
     displayWord("zehn");
     displayWord("nach");
-  } else if (minuten >= 20 und minuten < 25) {
+  } else if (minuten >= 20 && minuten < 25) {
     displayWord("zehn");
     displayWord("vor");
     displayWord("halb");
-  } else if (minuten >= 25 und minuten < 30) {
+  } else if (minuten >= 25 && minuten < 30) {
     displayWord("fuenf");
     displayWord("vor");
     displayWord("halb");
-  } else if (minuten >= 30 und minuten < 35) {
+  } else if (minuten >= 30 && minuten < 35) {
     displayWord("halb");
-  } else if (minuten >= 35 und minuten < 40) {
+  } else if (minuten >= 35 && minuten < 40) {
     displayWord("fuenf");
     displayWord("nach");
     displayWord("halb");
-  } else if (minuten >= 40 und minuten < 45) {
+  } else if (minuten >= 40 && minuten < 45) {
     displayWord("zehn");
     displayWord("nach");
     displayWord("halb");
-  } else if (minuten >= 45 und minuten < 50) {
+  } else if (minuten >= 45 && minuten < 50) {
     displayWord("fuenf");
     displayWord("zehn");
     displayWord("vor");
-  } else if (minuten >= 50 und minuten < 55) {
+  } else if (minuten >= 50 && minuten < 55) {
     displayWord("zehn");
     displayWord("vor");
-  } else if (minuten >= 55 und minuten < 60) {
+  } else if (minuten >= 55 && minuten < 60) {
     displayWord("fuenf");
     displayWord("vor");
   }
