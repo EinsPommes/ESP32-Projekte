@@ -30,6 +30,7 @@ Installiere die folgenden Bibliotheken über den Arduino Bibliotheksverwalter (`
 - **Adafruit NeoPixel**
 - **ESPAsyncWebServer**
 - **NTPClient**
+- **Async TCP**
 
 Einige Bibliotheken müssen eventuell manuell installiert werden, wenn sie nicht im Bibliotheksverwalter verfügbar sind. Schaue dazu auf den GitHub-Seiten der jeweiligen Bibliotheken nach.
 
@@ -39,6 +40,9 @@ Einige Bibliotheken müssen eventuell manuell installiert werden, wenn sie nicht
   - **Daten-Pin**: Verbinde ihn mit GPIO 6 des ESP32.
   - **Stromversorgung (5V)**: Verbinde sie mit einer geeigneten Stromquelle (sicherstellen, dass die Stromquelle zu den Anforderungen der LED-Matrix passt).
   - **Masse (GND)**: Verbinde sie mit dem GND-Pin des ESP32.
+
+### Bauplan (wird noch geupdatet)
+https://wokwi.com/projects/413110737244208129
 
 ### Schritt 4: Code anpassen
 
