@@ -30,7 +30,6 @@ Installiere die folgenden Bibliotheken über den Arduino Bibliotheksverwalter (`
 - **Adafruit NeoPixel**
 - **ESPAsyncWebServer**
 - **NTPClient**
-- **WiFi**
 
 Einige Bibliotheken müssen eventuell manuell installiert werden, wenn sie nicht im Bibliotheksverwalter verfügbar sind. Schaue dazu auf den GitHub-Seiten der jeweiligen Bibliotheken nach.
 
