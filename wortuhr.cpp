@@ -38,17 +38,6 @@ struct Wort {
   int positionen[8][2]; // Maximal 8 Positionen für Einfachheit
 };
 
-/*
-ESISTCA. 
-FÜNFZEHN
-VOR.NACH
-HALBFÜNF
-ZDWREINS
-ACHTVIER
-SIECHSUB
-ZWÖEHLNF
-*/
-
 Wort wörter[] = {
   {"ES", {{0, 0}, {0, 1}, {-1, -1}}},
   {"IST", {{0, 2}, {0, 3}, {0, 4}, {-1, -1}}},
@@ -72,6 +61,28 @@ Wort wörter[] = {
   {"ZWOELF", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {-1, -1}}},
   {".", {{2, 3}, {-1, -1}}},
 };
+
+// Farben definieren
+uint32_t farben[] = {
+  strip.Color(255, 0, 0),   // Rot
+  strip.Color(0, 255, 0),   // Grün
+  strip.Color(0, 0, 255),   // Blau
+  strip.Color(255, 255, 0), // Gelb
+  strip.Color(255, 0, 255), // Magenta
+  strip.Color(0, 255, 255), // Cyan
+  strip.Color(255, 165, 0), // Orange
+  strip.Color(128, 0, 128), // Lila
+  strip.Color(0, 128, 0),   // Dunkelgrün
+  strip.Color(0, 0, 128),   // Dunkelblau
+  strip.Color(255, 20, 147),// Pink
+  strip.Color(210, 105, 30),// Schokolade
+  strip.Color(105, 105, 105), // Dunkelgrau
+  strip.Color(255, 215, 0), // Gold
+  strip.Color(173, 255, 47),// Gelbgrün
+  strip.Color(0, 191, 255)  // Himmelblau
+};
+
+unsigned int farbindex = 0;
 
 // WiFiUDP-Instanz
 WiFiUDP ntpUDP;
