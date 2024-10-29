@@ -2,11 +2,10 @@
 #include <NTPClient.h>
 #include <WiFiUdp.h>
 #include <Adafruit_NeoPixel.h>
-#include <time.h>
 #include <ESPAsyncWebServer.h>
 
 // Definiere den Pin, an dem die NeoPixel-Datenleitung angeschlossen ist
-#define PIN 6
+#define PIN 13 // Verwende einen geeigneten GPIO-Pin
 
 // Definiere die Anzahl der Pixel in der 8x8-Matrix
 #define NUMPIXELS 64
@@ -38,6 +37,7 @@ struct Wort {
   const char* text;
   int positionen[8][2]; // Maximal 8 Positionen für Einfachheit
 };
+
 /*
 ESISTCA. 
 FÜNFZEHN
@@ -53,23 +53,23 @@ Wort wörter[] = {
   {"ES", {{0, 0}, {0, 1}, {-1, -1}}},
   {"IST", {{0, 2}, {0, 3}, {0, 4}, {-1, -1}}},
   {"CA.", {{0, 5}, {0, 6}, {0, 7}, {-1, -1}}},
-  {"fuenf", {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {-1, -1}}},
-  {"zehn", {{1, 4}, {1, 5}, {1, 6}, {1, 7}, {-1, -1}}},
-  {"vor", {{2, 0}, {2, 1}, {2, 2}, {-1, -1}}},
-  {"nach", {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {-1, -1}}},
-  {"halb", {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {-1, -1}}},
+  {"FUENF", {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {-1, -1}}},
+  {"ZEHN", {{1, 4}, {1, 5}, {1, 6}, {1, 7}, {-1, -1}}},
+  {"VOR", {{2, 0}, {2, 1}, {2, 2}, {-1, -1}}},
+  {"NACH", {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {-1, -1}}},
+  {"HALB", {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {-1, -1}}},
   {"EINS", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
-  {"ZWEI", {{4, 0}, {4, 2}, {4, 4}, {4, 5}, {-1, -1}}},
-  {"DREI", {{4, 1}, {4, 3}, {4, 4}, {4, 5}, {-1, -1}}},
+  {"ZWEI", {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {-1, -1}}},
+  {"DREI", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
   {"VIER", {{5, 4}, {5, 5}, {5, 6}, {5, 7}, {-1, -1}}},
   {"FUENF", {{3, 4}, {3, 5}, {3, 6}, {3, 7}, {-1, -1}}},
-  {"SECHS", {{6, 0}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {-1, -1}}},
-  {"SIEBEN", {{6, 0}, {6, 1}, {6, 2}, {6, 7}, {7, 3}, {7, 6}, {-1, -1}}},
+  {"SECHS", {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {-1, -1}}},
+  {"SIEBEN", {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {-1, -1}}},
   {"ACHT", {{5, 0}, {5, 1}, {5, 2}, {5, 3}, {-1, -1}}},
   {"NEUN", {{4, 6}, {5, 6}, {6, 6}, {7, 6}, {-1, -1}}},
-  {"ZEHN", {{7, 0}, {7, 3}, {7, 4}, {7, 6}, {-1, -1}}},
-  {"ELF", {{7, 3}, {7, 5}, {7, 7}, {-1, -1}}},
-  {"ZWOELF", {{7, 0}, {7, 1}, {7, 2}, {7, 5}, {7, 7}, {-1, -1}}},
+  {"ZEHN", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {-1, -1}}},
+  {"ELF", {{7, 3}, {7, 4}, {7, 5}, {-1, -1}}},
+  {"ZWOELF", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {7, 4}, {7, 5}, {-1, -1}}},
   {".", {{2, 3}, {-1, -1}}},
 };
 
@@ -87,17 +87,11 @@ void initTime() {
 }
 
 void setup() {
-  // Zeige "chill-zone.xyz" beim Booten an
-  clearMatrix();
-  displayWord("CHILL");
-  displayWord("ZONE");
-  strip.show();
-  delay(3000);
-  Serial.begin(115200);
-
   // Initialisiere den NeoPixel-Strip
   strip.begin();
   strip.show(); // Initialisiere alle Pixel auf "aus"
+
+  Serial.begin(115200);
 
   // Mit WLAN verbinden
   WiFi.begin(ssid, password);
@@ -129,10 +123,7 @@ void setup() {
     request->send(200, "text/html", html);
   });
 
-  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "Update-Modus aktiviert");
-  });
-
+  // Weitere Server-Routen konfigurieren
   server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", "WordClock wird neu gestartet...");
     delay(1000);
@@ -146,68 +137,15 @@ void setup() {
     ESP.restart();
   });
 
-  server.on("/reset_settings", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "WordClock-Einstellungen wurden zurückgesetzt");
-  });
-
-  server.on("/changeTimeColor", HTTP_POST, [](AsyncWebServerRequest *request){
-    if (request->hasParam("color", true)) {
-      String color = request->getParam("color", true)->value();
-      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
-      timeColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
-    }
-    request->send(200, "text/plain", "Farbe der Uhrzeit geändert");
-  });
-
-  server.on("/changeBackgroundColor", HTTP_POST, [](AsyncWebServerRequest *request){
-    if (request->hasParam("color", true)) {
-      String color = request->getParam("color", true)->value();
-      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
-      backgroundColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
-    }
-    request->send(200, "text/plain", "Hintergrundfarbe geändert");
-  });
-
-  server.on("/toggleRandomTextColor", HTTP_POST, [](AsyncWebServerRequest *request){
-    randomTextColor = !randomTextColor;
-    request->send(200, "text/plain", "Zufällige Textfarbe geändert");
-  });
-
-  server.on("/toggleShowSingleMinutes", HTTP_POST, [](AsyncWebServerRequest *request){
-    showSingleMinutes = !showSingleMinutes;
-    request->send(200, "text/plain", "Anzeige der einzelnen Minuten geändert");
-  });
-
   server.begin();
 }
 
-#ifdef TEST
-unsigned int testhour = 11;
-unsigned int testminute = 0;
 void loop() {
-  testminute++;
-  if (testminute >= 60) {
-    testminute = 0;
-    testhour = (testhour + 1) % 12;
-  }
-
-  // Zeige die aktuelle Uhrzeit in Worten an
-  displayTimeInWords(testhour, testminute);
-  strip.show();
-  delay(250);
-}
-
-#else
-#define UPDATETIME 60
-int timeclient = 1;
-void loop() {
-  // Aktualisiere den NTP-Client
-  unsigned long start_millis = millis();
-  if (--timeclient <= 0) {
-    Serial.println("Zeit wird aktualisiert");
+  // Aktualisiere den NTP-Client periodisch
+  static unsigned long lastUpdate = 0;
+  if (millis() - lastUpdate > 60000) { // Aktualisiere jede Minute
     timeClient.update();
-    Serial.println("Fertig");
-    timeclient = UPDATETIME;
+    lastUpdate = millis();
   }
 
   // Hole die aktuelle Zeit
@@ -222,42 +160,16 @@ void loop() {
   // Zeige die aktuelle Uhrzeit in Worten an
   displayTimeInWords(stunden, minuten);
   strip.show();
-
-  Serial.print(stunden);
-  Serial.print(":");
-  Serial.println(minuten);
-  delay(1000 - (millis() - start_millis));
 }
-#endif
-
-uint32_t farben[] = {
-  strip.Color(30, 0, 0),    // Rot
-  strip.Color(0, 30, 0),    // Grün
-  strip.Color(0, 0, 30),    // Blau
-  strip.Color(30, 30, 0),   // Gelb
-  strip.Color(0, 30, 30),   // Cyan
-  strip.Color(30, 0, 30),   // Magenta
-  strip.Color(15, 0, 15),   // Lila
-  strip.Color(0, 15, 15),   // Türkis
-  strip.Color(15, 15, 0),   // Olive
-  strip.Color(30, 23, 24),  // Pink
-  strip.Color(0, 15, 30),   // Grau
-  strip.Color(0, 0, 15),    // Marineblau
-  strip.Color(30, 20, 0),   // Orange
-  strip.Color(15, 0, 0),    // Kastanienbraun
-  strip.Color(0, 15, 0),    // Dunkelgrün
-  strip.Color(30, 30, 30)   // Weiß
-};
-int farbindex = 0;
 
 // Funktion zum Anzeigen eines Wortes auf der Matrix
 void displayWord(const char* wort, bool inc_color = true) {
   for (unsigned int i = 0; i < sizeof(wörter) / sizeof(wörter[0]); i++) {
     if (strcmp(wörter[i].text, wort) == 0) {
       for (int j = 0; j < 8; j++) {
-        int spalte = 7 - wörter[i].positionen[j][0];
+        int spalte = wörter[i].positionen[j][0];
         int reihe = wörter[i].positionen[j][1];
-        if ((reihe < 0 || reihe > 7) || (spalte < 0 || spalte > 7)) break; // Ende der Positionen
+        if ((reihe < 0 || reihe >= ROWS) || (spalte < 0 || spalte >= COLS)) break; // Ende der Positionen
         int pixelIndex = reihe * COLS + spalte;
         strip.setPixelColor(pixelIndex, randomTextColor ? farben[random(0, 16)] : farben[farbindex]); // Farbe setzen
       }
@@ -276,61 +188,53 @@ void clearMatrix() {
   }
 }
 
-bool punkt = false;
-
 // Funktion zur Anzeige der Uhrzeit in Worten
 void displayTimeInWords(unsigned int stunden, unsigned int minuten) {
   farbindex = minuten % 16;
   clearMatrix();
   displayWord("ES");
   displayWord("IST");
-  punkt = !punkt;
-  if (punkt) {
-    displayWord(".");
-  } else {
-    farbindex = (farbindex + 1) % 16;
-  }
 
   if (minuten > 0 && minuten < 5) {
     displayWord("CA.");
   } else if (minuten >= 5 && minuten < 10) {
-    displayWord("fuenf");
-    displayWord("nach");
+    displayWord("FUENF");
+    displayWord("NACH");
   } else if (minuten >= 10 && minuten < 15) {
-    displayWord("zehn");
-    displayWord("nach");
+    displayWord("ZEHN");
+    displayWord("NACH");
   } else if (minuten >= 15 && minuten < 20) {
-    displayWord("fuenf");
-    displayWord("zehn");
-    displayWord("nach");
+    displayWord("FUENF");
+    displayWord("ZEHN");
+    displayWord("NACH");
   } else if (minuten >= 20 && minuten < 25) {
-    displayWord("zehn");
-    displayWord("vor");
-    displayWord("halb");
+    displayWord("ZEHN");
+    displayWord("VOR");
+    displayWord("HALB");
   } else if (minuten >= 25 && minuten < 30) {
-    displayWord("fuenf");
-    displayWord("vor");
-    displayWord("halb");
+    displayWord("FUENF");
+    displayWord("VOR");
+    displayWord("HALB");
   } else if (minuten >= 30 && minuten < 35) {
-    displayWord("halb");
+    displayWord("HALB");
   } else if (minuten >= 35 && minuten < 40) {
-    displayWord("fuenf");
-    displayWord("nach");
-    displayWord("halb");
+    displayWord("FUENF");
+    displayWord("NACH");
+    displayWord("HALB");
   } else if (minuten >= 40 && minuten < 45) {
-    displayWord("zehn");
-    displayWord("nach");
-    displayWord("halb");
+    displayWord("ZEHN");
+    displayWord("NACH");
+    displayWord("HALB");
   } else if (minuten >= 45 && minuten < 50) {
-    displayWord("fuenf");
-    displayWord("zehn");
-    displayWord("vor");
+    displayWord("FUENF");
+    displayWord("ZEHN");
+    displayWord("VOR");
   } else if (minuten >= 50 && minuten < 55) {
-    displayWord("zehn");
-    displayWord("vor");
+    displayWord("ZEHN");
+    displayWord("VOR");
   } else if (minuten >= 55 && minuten < 60) {
-    displayWord("fuenf");
-    displayWord("vor");
+    displayWord("FUENF");
+    displayWord("VOR");
   }
 
   if (minuten >= 20) {
