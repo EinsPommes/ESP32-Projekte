@@ -69,8 +69,8 @@ Einige Bibliotheken müssen eventuell manuell installiert werden, wenn sie nicht
 - **Weboberfläche nicht zugänglich**: Stelle sicher, dass du mit demselben WLAN-Netzwerk wie der ESP32 verbunden bist und die richtige IP-Adresse verwendest.
 
 ## Helfer 
-- [EinsPommes](chill-zone.xyz)
-- [TypTech](typtech.de)
+- [EinsPommes](https://chill-zone.xyz)
+- [TypTech](https://typtech.de)
 
 ## Lizenz
 
