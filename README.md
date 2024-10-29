@@ -68,6 +68,10 @@ Einige Bibliotheken müssen eventuell manuell installiert werden, wenn sie nicht
 - **Keine LED-Reaktion**: Überprüfe, ob die NeoPixel-Matrix korrekt mit dem richtigen GPIO-Pin verbunden ist und ob die Stromversorgung ausreicht.
 - **Weboberfläche nicht zugänglich**: Stelle sicher, dass du mit demselben WLAN-Netzwerk wie der ESP32 verbunden bist und die richtige IP-Adresse verwendest.
 
+## Helfer 
+- [EinsPommes](chill-zone.xyz)
+- [TypTech](typtech.de)
+
 ## Lizenz
 
 Dieses Projekt ist nur für den nicht-kommerziellen Gebrauch lizenziert. Du darfst es ohne Genehmigung nicht für kommerzielle Zwecke verwenden.
