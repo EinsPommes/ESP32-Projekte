@@ -6,7 +6,7 @@
 #include <ESPAsyncWebServer.h>
 
 // Definiere den Pin, an dem die NeoPixel-Datenleitung angeschlossen ist
-#define PIN 6
+#define PIN 13
 
 // Definiere die Anzahl der Pixel in der 8x8-Matrix
 #define NUMPIXELS 64
@@ -38,16 +38,6 @@ struct Wort {
   const char* text;
   int positionen[8][2]; // Maximal 8 Positionen für Einfachheit
 };
-/*
-ESISTCA. 
-FÜNFZEHN
-VOR.NACH
-HALBFÜNF
-ZDWREINS
-ACHTVIER
-SIECHSUB
-ZWÖEHLNF
-*/
 
 Wort wörter[] = {
   {"ES", {{0, 0}, {0, 1}, {-1, -1}}},
@@ -59,17 +49,17 @@ Wort wörter[] = {
   {"nach", {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {-1, -1}}},
   {"halb", {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {-1, -1}}},
   {"EINS", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
-  {"ZWEI", {{4, 0}, {4, 2}, {4, 4}, {4, 5}, {-1, -1}}},
-  {"DREI", {{4, 1}, {4, 3}, {4, 4}, {4, 5}, {-1, -1}}},
+  {"ZWEI", {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {-1, -1}}},
+  {"DREI", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
   {"VIER", {{5, 4}, {5, 5}, {5, 6}, {5, 7}, {-1, -1}}},
   {"FUENF", {{3, 4}, {3, 5}, {3, 6}, {3, 7}, {-1, -1}}},
-  {"SECHS", {{6, 0}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {-1, -1}}},
-  {"SIEBEN", {{6, 0}, {6, 1}, {6, 2}, {6, 7}, {7, 3}, {7, 6}, {-1, -1}}},
+  {"SECHS", {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {-1, -1}}},
+  {"SIEBEN", {{6, 4}, {6, 5}, {6, 6}, {6, 7}, {-1, -1}}},
   {"ACHT", {{5, 0}, {5, 1}, {5, 2}, {5, 3}, {-1, -1}}},
-  {"NEUN", {{4, 6}, {5, 6}, {6, 6}, {7, 6}, {-1, -1}}},
-  {"ZEHN", {{7, 0}, {7, 3}, {7, 4}, {7, 6}, {-1, -1}}},
-  {"ELF", {{7, 3}, {7, 5}, {7, 7}, {-1, -1}}},
-  {"ZWOELF", {{7, 0}, {7, 1}, {7, 2}, {7, 5}, {7, 7}, {-1, -1}}},
+  {"NEUN", {{7, 4}, {7, 5}, {7, 6}, {7, 7}, {-1, -1}}},
+  {"ZEHN", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {-1, -1}}},
+  {"ELF", {{6, 0}, {6, 1}, {6, 2}, {-1, -1}}},
+  {"ZWOELF", {{5, 4}, {5, 5}, {5, 6}, {5, 7}, {-1, -1}}},
   {".", {{2, 3}, {-1, -1}}},
 };
 
@@ -112,18 +102,18 @@ void setup() {
   timeClient.begin();
   initTime();
 
-  // Webserver konfigurieren
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     String html = "<h1>WordClock Einstellungen</h1>";
-    html += "<p><a href='/update'>Aktualisierungsmodus aktivieren</a></p>";
-    html += "<p><a href='/restart'>Neustart</a></p>";
-    html += "<p><a href='/reset_wifi'>WLAN-Einstellungen zurücksetzen</a></p>";
-    html += "<p><a href='/reset_settings'>WordClock-Einstellungen zurücksetzen</a></p>";
+    html += "<p><a href='/update'><i class=\"fas fa-sync-alt\"></i> Aktualisierungsmodus aktivieren</a></p>";
+    html += "<p><a href='/restart'><i class=\"fas fa-redo\"></i> Neustart</a></p>";
+    html += "<p><a href='/reset_wifi'><i class=\"fas fa-wifi\"></i> WLAN-Einstellungen zurücksetzen</a></p>";
+    html += "<p><a href='/reset_settings'><i class=\"fas fa-cogs\"></i> WordClock-Einstellungen zurücksetzen</a></p>";
     html += "<h2>LED Einstellungen</h2>";
     html += "<p>Farbe der Uhrzeit: <input type='color' id='timeColor' value='#FF0000' onchange='changeTimeColor(this.value)'></p>";
     html += "<p>Hintergrundfarbe: <input type='color' id='backgroundColor' value='#00FFFF' onchange='changeBackgroundColor(this.value)'></p>";
     html += "<p><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</p>";
     html += "<p><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</p>";
+    html += "<div class='footer'>Powered by <a href='https://chill-zone.xyz' target='_blank'>chill-zone.xyz</a></div>";
     request->send(200, "text/html", html);
   });
 
@@ -253,9 +243,9 @@ void displayWord(const char* wort, bool inc_color = true) {
   for (unsigned int i = 0; i < sizeof(wörter) / sizeof(wörter[0]); i++) {
     if (strcmp(wörter[i].text, wort) == 0) {
       for (int j = 0; j < 8; j++) {
-        int spalte = 7 - wörter[i].positionen[j][0];
-        int reihe = wörter[i].positionen[j][1];
-        if ((reihe < 0 || reihe > 7) || (spalte < 0 || spalte > 7)) break; // Ende der Positionen
+        int reihe = wörter[i].positionen[j][0];
+        int spalte = wörter[i].positionen[j][1];
+        if ((reihe < 0 || reihe >= ROWS) || (spalte < 0 || spalte >= COLS)) break; // Ende der Positionen
         int pixelIndex = reihe * COLS + spalte;
         strip.setPixelColor(pixelIndex, randomTextColor ? farben[random(0, 16)] : farben[farbindex]); // Farbe setzen
       }
