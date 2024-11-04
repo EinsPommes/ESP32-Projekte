@@ -102,18 +102,35 @@ void setup() {
   timeClient.begin();
   initTime();
 
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-    String html = "<h1>WordClock Einstellungen</h1>";
-    html += "<p><a href='/update'><i class=\"fas fa-sync-alt\"></i> Aktualisierungsmodus aktivieren</a></p>";
-    html += "<p><a href='/restart'><i class=\"fas fa-redo\"></i> Neustart</a></p>";
-    html += "<p><a href='/reset_wifi'><i class=\"fas fa-wifi\"></i> WLAN-Einstellungen zurücksetzen</a></p>";
-    html += "<p><a href='/reset_settings'><i class=\"fas fa-cogs\"></i> WordClock-Einstellungen zurücksetzen</a></p>";
+// Webserver konfigurieren
+server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    String html = "<!DOCTYPE html><html lang='de'>";
+    html += "<head><meta charset='UTF-8'>";
+    html += "<title>WordClock Einstellungen</title>";
+    html += "<style>";
+    html += "body { font-family: Arial, sans-serif; background-color: #f2f2f2; color: #333; text-align: center; padding: 20px; }";
+    html += "h1 { color: #4CAF50; }";
+    html += "h2 { color: #333; margin-top: 40px; }";
+    html += "a { display: inline-block; margin: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; }";
+    html += "a:hover { background-color: #45a049; }";
+    html += "p { font-size: 18px; }";
+    html += "input[type='color'] { margin-left: 10px; }";
+    html += "input[type='checkbox'] { margin-right: 10px; }";
+    html += "</style></head><body>";
+
+    html += "<h1>WordClock Einstellungen</h1>";
+    html += "<p><a href='/update'>Aktualisierungsmodus aktivieren</a></p>";
+    html += "<p><a href='/restart'>Neustart</a></p>";
+    html += "<p><a href='/reset_wifi'>WLAN-Einstellungen zurücksetzen</a></p>";
+    html += "<p><a href='/reset_settings'>WordClock-Einstellungen zurücksetzen</a></p>";
+
     html += "<h2>LED Einstellungen</h2>";
     html += "<p>Farbe der Uhrzeit: <input type='color' id='timeColor' value='#FF0000' onchange='changeTimeColor(this.value)'></p>";
     html += "<p>Hintergrundfarbe: <input type='color' id='backgroundColor' value='#00FFFF' onchange='changeBackgroundColor(this.value)'></p>";
-    html += "<p><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</p>";
-    html += "<p><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</p>";
-    html += "<div class='footer'>Powered by <a href='https://chill-zone.xyz' target='_blank'>chill-zone.xyz</a></div>";
+    html += "<p><label><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</label></p>";
+    html += "<p><label><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</label></p>";
+
+    html += "</body></html>";
     request->send(200, "text/html", html);
   });
 
