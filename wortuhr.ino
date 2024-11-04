@@ -108,11 +108,11 @@ server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     html += "<head><meta charset='UTF-8'>";
     html += "<title>WordClock Einstellungen</title>";
     html += "<style>";
-    html += "body { font-family: Arial, sans-serif; background-color: #f2f2f2; color: #333; text-align: center; padding: 20px; }";
-    html += "h1 { color: #4CAF50; }";
-    html += "h2 { color: #333; margin-top: 40px; }";
-    html += "a { display: inline-block; margin: 10px; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; }";
-    html += "a:hover { background-color: #45a049; }";
+    html += "body { font-family: Arial, sans-serif; background-color: #363636; color: #ffffff; text-align: center; padding: 20px; }";
+    html += "h1 { color: #1c5c97; }";
+    html += "h2 { color: #1c5c97; margin-top: 40px; }";
+    html += "a { display: inline-block; margin: 10px; padding: 10px 20px; background-color: #1c5c97; color: white; text-decoration: none; border-radius: 5px; }";
+    html += "a:hover { background-color: #174672; }";
     html += "p { font-size: 18px; }";
     html += "input[type='color'] { margin-left: 10px; }";
     html += "input[type='checkbox'] { margin-right: 10px; }";
