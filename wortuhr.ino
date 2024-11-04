@@ -129,10 +129,13 @@ server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     html += "<p>Hintergrundfarbe: <input type='color' id='backgroundColor' value='#00FFFF' onchange='changeBackgroundColor(this.value)'></p>";
     html += "<p><label><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</label></p>";
     html += "<p><label><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</label></p>";
+	
+	  html += "<p><a href='/save'>Speichern</a></p>";
 
     html += "</body></html>";
     request->send(200, "text/html", html);
   });
+
 
   server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", "Update-Modus aktiviert");
