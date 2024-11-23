@@ -3,15 +3,15 @@
 #include <WiFiUdp.h>
 #include <Adafruit_NeoPixel.h>
 #include <time.h>
-#include <ESPAsyncWebServer.h>
+#include <WebServer.h>
 
 // Definiere den Pin, an dem die NeoPixel-Datenleitung angeschlossen ist
 #define PIN 13
 
-// Definiere die Anzahl der Pixel in der 8x8-Matrix
-#define NUMPIXELS 64
-#define ROWS 8
-#define COLS 8
+// Definiere die Anzahl der Pixel in der 16x16-Matrix
+#define NUMPIXELS 256
+#define ROWS 16
+#define COLS 16
 
 // WLAN-Zugangsdaten
 const char* ssid = "<WLAN-SSID>";
@@ -25,7 +25,7 @@ const long utcOffsetInSeconds = 3600; // Passe an deine Zeitzone an
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 // Webserver auf Port 80
-AsyncWebServer server(80);
+WebServer server(80);
 
 // LED-Einstellungen
 int timeColor = strip.Color(30, 0, 0); // Standardfarbe für die Uhrzeit (Rot)
@@ -41,26 +41,28 @@ struct Wort {
 
 Wort wörter[] = {
   {"ES", {{0, 0}, {0, 1}, {-1, -1}}},
-  {"IST", {{0, 2}, {0, 3}, {0, 4}, {-1, -1}}},
-  {"CA.", {{0, 5}, {0, 6}, {0, 7}, {-1, -1}}},
-  {"fuenf", {{1, 0}, {1, 1}, {1, 2}, {1, 3}, {-1, -1}}},
-  {"zehn", {{1, 4}, {1, 5}, {1, 6}, {1, 7}, {-1, -1}}},
-  {"vor", {{2, 0}, {2, 1}, {2, 2}, {-1, -1}}},
-  {"nach", {{2, 4}, {2, 5}, {2, 6}, {2, 7}, {-1, -1}}},
-  {"halb", {{3, 0}, {3, 1}, {3, 2}, {3, 3}, {-1, -1}}},
-  {"EINS", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
-  {"ZWEI", {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {-1, -1}}},
-  {"DREI", {{4, 4}, {4, 5}, {4, 6}, {4, 7}, {-1, -1}}},
-  {"VIER", {{5, 4}, {5, 5}, {5, 6}, {5, 7}, {-1, -1}}},
-  {"FUENF", {{3, 4}, {3, 5}, {3, 6}, {3, 7}, {-1, -1}}},
-  {"SECHS", {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {-1, -1}}},
-  {"SIEBEN", {{6, 4}, {6, 5}, {6, 6}, {6, 7}, {-1, -1}}},
-  {"ACHT", {{5, 0}, {5, 1}, {5, 2}, {5, 3}, {-1, -1}}},
-  {"NEUN", {{7, 4}, {7, 5}, {7, 6}, {7, 7}, {-1, -1}}},
-  {"ZEHN", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {-1, -1}}},
-  {"ELF", {{6, 0}, {6, 1}, {6, 2}, {-1, -1}}},
-  {"ZWOELF", {{5, 4}, {5, 5}, {5, 6}, {5, 7}, {-1, -1}}},
-  {".", {{2, 3}, {-1, -1}}},
+  {"IST", {{0, 3}, {0, 4}, {0, 5}, {-1, -1}}},
+  {"MINUTEN", {{0, 7}, {0, 8}, {0, 9}, {0, 10}, {0, 11}, {0, 12}, {0, 13}, {-1, -1}}},
+  {"ZWANZIG", {{12, 0}, {12, 1}, {12, 2}, {12, 3}, {12, 4}, {12, 5}, {12, 6}, {-1, -1}}},
+  {"VIERZIG", {{13, 0}, {13, 1}, {13, 2}, {13, 3}, {13, 4}, {13, 5}, {13, 6}, {-1, -1}}},
+  {"FUENF", {{2, 0}, {2, 1}, {2, 2}, {2, 3}, {-1, -1}}},
+  {"ZEHN", {{4, 0}, {4, 1}, {4, 2}, {4, 3}, {-1, -1}}},
+  {"NACH", {{3, 5}, {3, 6}, {3, 7}, {3, 8}, {-1, -1}}},
+  {"VOR", {{3, 9}, {3, 10}, {3, 11}, {-1, -1}}},
+  {"HALB", {{5, 0}, {5, 1}, {5, 2}, {5, 3}, {-1, -1}}},
+  {"EINS", {{6, 0}, {6, 1}, {6, 2}, {6, 3}, {-1, -1}}},
+  {"ZWEI", {{7, 0}, {7, 1}, {7, 2}, {7, 3}, {-1, -1}}},
+  {"DREI", {{8, 0}, {8, 1}, {8, 2}, {8, 3}, {-1, -1}}},
+  {"VIER", {{9, 0}, {9, 1}, {9, 2}, {9, 3}, {-1, -1}}},
+  {"FUENF", {{10, 0}, {10, 1}, {10, 2}, {10, 3}, {10, 4}, {-1, -1}}},
+  {"SECHS", {{10, 6}, {10, 7}, {10, 8}, {10, 9}, {10, 10}, {-1, -1}}},
+  {"SIEBEN", {{11, 0}, {11, 1}, {11, 2}, {11, 3}, {11, 4}, {11, 5}, {11, 6}, {-1, -1}}},
+  {"ACHT", {{11, 8}, {11, 9}, {11, 10}, {11, 11}, {-1, -1}}},
+  {"NEUN", {{12, 8}, {12, 9}, {12, 10}, {12, 11}, {-1, -1}}},
+  {"ZEHN", {{13, 8}, {13, 9}, {13, 10}, {13, 11}, {-1, -1}}},
+  {"ELF", {{14, 8}, {14, 9}, {14, 10}, {-1, -1}}},
+  {"ZWOELF", {{15, 8}, {15, 9}, {15, 10}, {15, 11}, {15, 12}, {-1, -1}}},
+  {"UHR", {{6, 5}, {6, 6}, {6, 7}, {-1, -1}}}
 };
 
 // WiFiUDP-Instanz
@@ -68,6 +70,10 @@ WiFiUDP ntpUDP;
 
 // NTPClient-Instanz
 NTPClient timeClient(ntpUDP, ntpServer);
+
+// NTP Update Intervall (in Durchläufen)
+#define UPDATETIME 3600  // Update Zeit jede Stunde
+int timeclient = UPDATETIME;
 
 // Funktion zur Initialisierung der Zeit mit NTP und zum Festlegen der Zeitzone
 void initTime() {
@@ -77,18 +83,16 @@ void initTime() {
 }
 
 void setup() {
-  // Zeige "chill-zone.xyz" beim Booten an
-  clearMatrix();
-  strip.show();
-  delay(3000);
   Serial.begin(115200);
-
+  Serial.println("Starting WordClock...");
+  
   // Initialisiere den NeoPixel-Strip
   strip.begin();
-  strip.show(); // Initialisiere alle Pixel auf "aus"
-
+  Serial.println("NeoPixel initialized");
+  
   // Mit WLAN verbinden
   WiFi.begin(ssid, password);
+  Serial.println("Connecting to WiFi...");
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Verbinde mit WLAN...");
@@ -102,8 +106,21 @@ void setup() {
   timeClient.begin();
   initTime();
 
-// Webserver konfigurieren
-server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+  // Webserver Routen
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/update", HTTP_GET, handleUpdate);
+  server.on("/restart", HTTP_GET, handleRestart);
+  server.on("/reset_wifi", HTTP_GET, handleResetWifi);
+  server.on("/reset_settings", HTTP_GET, handleResetSettings);
+  server.on("/changeTimeColor", HTTP_POST, handleChangeTimeColor);
+  server.on("/changeBackgroundColor", HTTP_POST, handleChangeBackgroundColor);
+  server.on("/toggleRandomTextColor", HTTP_POST, handleToggleRandomTextColor);
+  server.on("/toggleShowSingleMinutes", HTTP_POST, handleToggleShowSingleMinutes);
+  
+  server.begin();
+}
+
+void handleRoot() {
     String html = "<!DOCTYPE html><html lang='de'>";
     html += "<head><meta charset='UTF-8'>";
     html += "<title>WordClock Einstellungen</title>";
@@ -129,86 +146,63 @@ server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     html += "<p>Hintergrundfarbe: <input type='color' id='backgroundColor' value='#00FFFF' onchange='changeBackgroundColor(this.value)'></p>";
     html += "<p><label><input type='checkbox' id='randomTextColor' onchange='toggleRandomTextColor()'> Zufällige Textfarbe jede Minute</label></p>";
     html += "<p><label><input type='checkbox' id='showSingleMinutes' onchange='toggleShowSingleMinutes()'> Einzelne Minuten anzeigen</label></p>";
-	
-	  html += "<p><a href='/save'>Speichern</a></p>";
-
+    
     html += "</body></html>";
-    request->send(200, "text/html", html);
-  });
+    server.send(200, "text/html", html);
+}
 
+void handleUpdate() {
+    server.send(200, "text/plain", "Update-Modus aktiviert");
+}
 
-  server.on("/update", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "Update-Modus aktiviert");
-  });
-
-  server.on("/restart", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "WordClock wird neu gestartet...");
+void handleRestart() {
+    server.send(200, "text/plain", "WordClock wird neu gestartet...");
     delay(1000);
     ESP.restart();
-  });
+}
 
-  server.on("/reset_wifi", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "WLAN-Einstellungen wurden zurückgesetzt");
+void handleResetWifi() {
+    server.send(200, "text/plain", "WLAN-Einstellungen wurden zurückgesetzt");
     WiFi.disconnect(true);
     delay(1000);
     ESP.restart();
-  });
+}
 
-  server.on("/reset_settings", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", "WordClock-Einstellungen wurden zurückgesetzt");
-  });
+void handleResetSettings() {
+    server.send(200, "text/plain", "WordClock-Einstellungen wurden zurückgesetzt");
+}
 
-  server.on("/changeTimeColor", HTTP_POST, [](AsyncWebServerRequest *request){
-    if (request->hasParam("color", true)) {
-      String color = request->getParam("color", true)->value();
-      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
-      timeColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
+void handleChangeTimeColor() {
+    if (server.hasArg("color")) {
+        String color = server.arg("color");
+        long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
+        timeColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
     }
-    request->send(200, "text/plain", "Farbe der Uhrzeit geändert");
-  });
+    server.send(200, "text/plain", "Farbe der Uhrzeit geändert");
+}
 
-  server.on("/changeBackgroundColor", HTTP_POST, [](AsyncWebServerRequest *request){
-    if (request->hasParam("color", true)) {
-      String color = request->getParam("color", true)->value();
-      long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
-      backgroundColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
+void handleChangeBackgroundColor() {
+    if (server.hasArg("color")) {
+        String color = server.arg("color");
+        long colorValue = strtol(color.substring(1).c_str(), NULL, 16);
+        backgroundColor = strip.Color((colorValue >> 16) & 0xFF, (colorValue >> 8) & 0xFF, colorValue & 0xFF);
     }
-    request->send(200, "text/plain", "Hintergrundfarbe geändert");
-  });
+    server.send(200, "text/plain", "Hintergrundfarbe geändert");
+}
 
-  server.on("/toggleRandomTextColor", HTTP_POST, [](AsyncWebServerRequest *request){
+void handleToggleRandomTextColor() {
     randomTextColor = !randomTextColor;
-    request->send(200, "text/plain", "Zufällige Textfarbe geändert");
-  });
+    server.send(200, "text/plain", "Zufällige Textfarbe geändert");
+}
 
-  server.on("/toggleShowSingleMinutes", HTTP_POST, [](AsyncWebServerRequest *request){
+void handleToggleShowSingleMinutes() {
     showSingleMinutes = !showSingleMinutes;
-    request->send(200, "text/plain", "Anzeige der einzelnen Minuten geändert");
-  });
-
-  server.begin();
+    server.send(200, "text/plain", "Anzeige der einzelnen Minuten geändert");
 }
 
-#ifdef TEST
-unsigned int testhour = 11;
-unsigned int testminute = 0;
 void loop() {
-  testminute++;
-  if (testminute >= 60) {
-    testminute = 0;
-    testhour = (testhour + 1) % 12;
-  }
-
-  // Zeige die aktuelle Uhrzeit in Worten an
-  displayTimeInWords(testhour, testminute);
-  strip.show();
-  delay(250);
-}
-
-#else
-#define UPDATETIME 60
-int timeclient = 1;
-void loop() {
+  server.handleClient();  // Wichtig: Webserver-Anfragen verarbeiten
+  
   // Aktualisiere den NTP-Client
   unsigned long start_millis = millis();
   if (--timeclient <= 0) {
@@ -236,7 +230,6 @@ void loop() {
   Serial.println(minuten);
   delay(1000 - (millis() - start_millis));
 }
-#endif
 
 uint32_t farben[] = {
   strip.Color(30, 0, 0),    // Rot
